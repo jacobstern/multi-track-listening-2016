@@ -13,7 +13,7 @@ export default {
     backgroundColor: 'transparent',
     color: 'rgb(0,0,0)',
     ':hover': {
-      backgroundColor: 'rgba(0,0,0,0.017)'
+      backgroundColor: 'rgba(0,0,0,0.03)'
     },
     ':disabled': {
       opacity: disabledOpacity,

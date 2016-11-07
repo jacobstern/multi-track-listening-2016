@@ -142,7 +142,7 @@ export default class extends Component {
         error = true
         break
       case RenderingStatus.SUCCESS:
-        status = 'oh yeah!'
+        status = 'success!'
         break
     }
     return (
@@ -221,7 +221,7 @@ export default class extends Component {
                 onChange={this.onMixDurationChange}
                 value={mixDuration}
                 min='0'
-                max='MAX_MIX_DURATION'
+                max={MAX_MIX_DURATION}
               />
               <label
                 className={styles.durationLabel}
@@ -269,10 +269,7 @@ const styles = {
   }),
   durationInput: css({
     width: '38px',
-    padding: '2px',
-    verticalAlign: 'middle',
-    lineHeight: 'normal',
-    fontSize: '13px'
+    verticalAlign: 'middle'
   }),
   durationLabel: css({
     fontSize: '13px',

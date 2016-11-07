@@ -13,6 +13,7 @@ export default ({ css, controls, disabled, ...rest }) => (
 const styles = {
   controls: css({
     width: '300px',
+    height: '32px',
     border: '1px solid #666',
     '::-webkit-media-controls-panel': {
       background: 'transparent'

@@ -276,14 +276,17 @@ class Mixer {
     this.startSources(offlineSource1, offlineSource2, currentTime)
 
     offlineContext.oncomplete = event => {
-      // http://stackoverflow.com/questions/22560413/html5-web-audio-convert-audio-buffer-into-wav-file
       const buffer = event.renderedBuffer
       const worker = new Worker('static/js/recorder-worker.js')
 
-      worker.onmessage = e => {
-        const blob = e.data
+      worker.onmessage = event => {
         if (typeof success === 'function') {
-          success(blob)
+          success(event.data)
+        }
+      }
+      worker.onerror = event => {
+        if (typeof error === 'function') {
+          error(event.error)
         }
       }
       worker.postMessage({

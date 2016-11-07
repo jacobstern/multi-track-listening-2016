@@ -1,12 +1,14 @@
 import React, { Component } from 'react'
 import css from 'next/css'
-import Audio from '../components/Audio'
+import Audio from '../components/audio'
+import Button from '../components/button'
 import FileInput from '../components/file-input'
 import Head from '../components/head'
 import MixerControls from '../components/mixer-controls'
 import StatusText from '../components/status-text'
 import Step from '../components/step'
 import Steps from '../components/steps'
+import UploadModal from '../components/upload-modal'
 import mixer from '../services/mixer'
 
 const FileStatus = {
@@ -22,10 +24,13 @@ export default class extends Component {
     super(props)
     this.state = {
       currentStep: 0,
+      file1Name: '',
+      file2Name: '',
       file1Status: FileStatus.NULL,
       file2Status: FileStatus.NULL,
       supportsAudioParam: false,
-      playbackURL: null
+      playbackURL: null,
+      showModal: false
     }
   }
 
@@ -67,6 +72,7 @@ export default class extends Component {
         () => {
           this.setState({
             file1Status: FileStatus.READY,
+            file1Name: file.name,
             currentStep: 1
           })
         },
@@ -93,6 +99,7 @@ export default class extends Component {
         success => {
           this.setState({
             file2Status: FileStatus.READY,
+            file2Name: file.name,
             currentStep: 2
           })
         },
@@ -107,6 +114,15 @@ export default class extends Component {
 
   onRenderComplete = blob => {
     this.setState({ playbackURL: URL.createObjectURL(blob) })
+  }
+
+  onModalClose = () => {
+    this.setState({ showModal: false })
+  }
+
+  onShareClick = event => {
+    event.preventDefault()
+    this.setState({ showModal: true })
   }
 
   renderFileStatus (state) {
@@ -131,7 +147,7 @@ export default class extends Component {
   }
 
   render () {
-    const { currentStep, file1Status, file2Status, playbackURL } = this.state
+    const { currentStep, file1Status, file2Status, playbackURL, showModal } = this.state
     return (
       <div>
         <Head title='Multi-Track Listening!' />
@@ -168,16 +184,28 @@ export default class extends Component {
                 disabled={currentStep < 2}
                 onRenderComplete={this.onRenderComplete}
               />
-              {playbackURL &&
-                <Audio
-                  css={styles.audio}
-                  controls
-                  src={playbackURL}
-                />
-              }
+              <Audio
+                css={styles.audio}
+                disabled={!playbackURL}
+                style={{visibility: playbackURL ? 'visible' : 'hidden'}}
+                controls
+                src={playbackURL}
+              />
+              <Button
+                css={styles.shareButton}
+                style={{visibility: playbackURL ? 'visible' : 'hidden'}}
+                onClick={this.onShareClick}
+              >
+                Share
+              </Button>
             </Step>
           </Steps>
         </div>
+        <UploadModal
+          active={playbackURL && showModal}
+          objectURL={playbackURL}
+          onClose={this.onModalClose}
+        />
       </div>
     )
   }
@@ -189,6 +217,10 @@ const styles = {
     fontSize: '15px'
   }),
   audio: css({
+    display: 'block',
     marginTop: '12px'
+  }),
+  shareButton: css({
+    margin: '12px 0'
   })
 }
