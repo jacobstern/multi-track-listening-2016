@@ -1,3 +1,5 @@
+import { MIX_GAIN, DEFAULT_MIX_DURATION, MIX_FADEOUT_DURATION } from '../common/constants'
+
 const createAudioContext = (key, type) => {
   // Keep audio context singleton in the global namespace for efficiency and to avoid errors when
   // hot reloading
@@ -32,7 +34,6 @@ class Mixer {
     this.previewContext = createAudioContext('_Mixer_previewContext')
     this.previewGain = this.previewContext.createGain()
     this.previewGain.connect(this.previewContext.destination)
-    this.previewGain.gain.value = 3
 
     this.previewPanner1 = this.previewContext.createPanner()
     this.previewPanner1.connect(this.previewGain)
@@ -52,7 +53,7 @@ class Mixer {
 
     this.playingPreview = false
 
-    this.mixDuration = 150
+    this.mixDuration = DEFAULT_MIX_DURATION
     this.track1Start = 0
     this.track2Start = 0
   }
@@ -161,6 +162,7 @@ class Mixer {
     const currentTime = this.previewContext.currentTime
     this.startPanners(this.previewPanner1, this.previewPanner2, currentTime)
     this.startSources(this.previewSource1, this.previewSource2, currentTime)
+    this.startGain(this.previewGain, currentTime)
 
     this.playingPreview = true
   }
@@ -174,6 +176,18 @@ class Mixer {
     this.previewSource2.stop()
 
     this.playingPreview = false
+  }
+
+  startGain (gain, currentTime) {
+    gain.gain.cancelScheduledValues(currentTime)
+    gain.gain.setValueAtTime(MIX_GAIN, currentTime)
+
+    if (this.mixDuration > MIX_FADEOUT_DURATION) {
+      const end = currentTime + this.mixDuration
+
+      gain.gain.setValueAtTime(MIX_GAIN, end - MIX_FADEOUT_DURATION)
+      gain.gain.exponentialRampToValueAtTime(0.01, end)
+    }
   }
 
   startPanners (panner1, panner2, currentTime) {
@@ -193,7 +207,7 @@ class Mixer {
     const { left, right } = this.createValueArrays(DRIFT_DURATION, DRIFT_RESOLUTION, DRIFT_RADIUS)
 
     for (let i = 0; i < this.mixDuration / DRIFT_DURATION; i++) {
-      const offset = (DRIFT_DURATION + 0.05) * i // Fudge factor of 0.05 to avoid collision
+      const offset = (DRIFT_DURATION + 0.01) * i // Fudge factor of 0.01 to avoid collision
 
       panner1.positionX.setValueCurveAtTime(left.x, currentTime + offset, DRIFT_DURATION)
       panner1.positionZ.setValueCurveAtTime(left.z, currentTime + offset, DRIFT_DURATION)
