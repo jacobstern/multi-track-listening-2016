@@ -160,9 +160,9 @@ class Mixer {
     this.previewSource2.connect(this.previewPanner2)
 
     const currentTime = this.previewContext.currentTime
+    this.startGain(this.previewGain, currentTime)
     this.startPanners(this.previewPanner1, this.previewPanner2, currentTime)
     this.startSources(this.previewSource1, this.previewSource2, currentTime)
-    this.startGain(this.previewGain, currentTime)
 
     this.playingPreview = true
   }
@@ -240,20 +240,23 @@ class Mixer {
   }
 
   render (success, error) {
-    if (this.source1 === null || this.source2 === null) {
+    if (this.source1 === null || this.source2 === null && typeof error === 'function') {
       error(new Error('Mixer sources are not ready'))
     }
 
     const OfflineAudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext
-    if (!OfflineAudioContext) {
+    if (!OfflineAudioContext && typeof error === 'function') {
       error(new Error('OfflineAudioContext not supported'))
     }
 
-    const offlineContext = new OfflineAudioContext(2, 44100 * 40, 44100)
+    const offlineContext = new OfflineAudioContext(2, 44100 * this.mixDuration, 44100)
     const offlinePanner1 = offlineContext.createPanner()
     const offlineSource1 = offlineContext.createBufferSource()
     const offlinePanner2 = offlineContext.createPanner()
     const offlineSource2 = offlineContext.createBufferSource()
+
+    const offlineGain = offlineContext.createGain()
+    offlineGain.connect(offlineContext.destination)
 
     this.configurePanner(offlinePanner1)
     this.configurePanner(offlinePanner2)
@@ -261,16 +264,44 @@ class Mixer {
 
     offlineSource1.buffer = this.source1
     offlineSource1.connect(offlinePanner1)
-    offlinePanner1.connect(offlineContext.destination)
+    offlinePanner1.connect(offlineGain)
 
     offlineSource2.buffer = this.source2
     offlineSource2.connect(offlinePanner2)
-    offlinePanner2.connect(offlineContext.destination)
+    offlinePanner2.connect(offlineGain)
 
-    offlineSource1.start()
-    offlineSource2.start()
+    const currentTime = offlineContext.currentTime
+    this.startGain(offlineGain, currentTime)
+    this.startPanners(offlinePanner1, offlinePanner2, currentTime)
+    this.startSources(offlineSource1, offlineSource2, currentTime)
 
-    offlineContext.oncomplete = event => success(event.renderedBuffer)
+    offlineContext.oncomplete = event => {
+      // http://stackoverflow.com/questions/22560413/html5-web-audio-convert-audio-buffer-into-wav-file
+      const buffer = event.renderedBuffer
+      const worker = new Worker('static/js/recorder-worker.js')
+
+      worker.onmessage = e => {
+        const blob = e.data
+        if (typeof success === 'function') {
+          success(blob)
+        }
+      }
+      worker.postMessage({
+        command: 'init',
+        config: { sampleRate: 44100, numChannels: 2 }
+      })
+      worker.postMessage({
+        command: 'record',
+        buffer: [
+          buffer.getChannelData(0),
+          buffer.getChannelData(1)
+        ]
+      })
+      worker.postMessage({
+        command: 'exportWAV',
+        type: 'audio/wav'
+      })
+    }
     offlineContext.startRendering()
   }
 }

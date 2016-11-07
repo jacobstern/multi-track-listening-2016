@@ -1,9 +1,18 @@
 import React, { Component } from 'react'
 import css, { merge } from 'next/css'
+import Audio from './audio'
 import Button from './button'
 import Input from './input'
+import StatusText from './status-text'
 import { DEFAULT_MIX_DURATION, MAX_MIX_DURATION } from '../common/constants'
 import mixer from '../services/mixer'
+
+const RenderingStatus = {
+  NONE: 'NONE',
+  RENDERING: 'RENDERING',
+  ERROR: 'ERROR',
+  SUCCESS: 'SUCCESS'
+}
 
 export default class extends Component {
 
@@ -14,7 +23,8 @@ export default class extends Component {
       track1Start: 0,
       track2Start: 0,
       mixDuration: DEFAULT_MIX_DURATION,
-      showValidationText: false
+      showValidationText: false,
+      renderingStatus: RenderingStatus.NONE
     }
   }
 
@@ -28,7 +38,7 @@ export default class extends Component {
   validateDuration (value, min = 0, max = Number.POSITIVE_INFINITY, defaultValue = 0) {
     const parsed = parseInt(value)
     let validated = defaultValue
-    if (parsed >= min && parsed < max) {
+    if (parsed >= min && parsed <= max) {
       validated = parsed
     }
     return { parsed, validated }
@@ -50,6 +60,20 @@ export default class extends Component {
 
   onFormSubmit = event => {
     event.preventDefault()
+    this.setState({ renderingStatus: RenderingStatus.RENDERING })
+    mixer.render(
+      blob => {
+        this.setState({
+          renderingStatus: RenderingStatus.SUCCESS
+        })
+        if (this.props.onRenderComplete) {
+          this.props.onRenderComplete(blob)
+        }
+      },
+      () => {
+        this.setState({ renderingStatus: RenderingStatus.ERROR })
+      }
+    )
   }
 
   onTrack1StartBlur = event => {
@@ -108,9 +132,37 @@ export default class extends Component {
       )
   }
 
+  renderRenderingStatus () {
+    const { renderingStatus } = this.state
+    let status = ''
+    let error = false
+    switch (renderingStatus) {
+      case RenderingStatus.ERROR:
+        status = 'hmm, something went wrong.'
+        error = true
+        break
+      case RenderingStatus.SUCCESS:
+        status = 'oh yeah!'
+        break
+    }
+    return (
+      <StatusText
+        label={renderingStatus === RenderingStatus.NONE ? '' : 'Rendering...'}
+        status={status}
+        error={error}
+      />
+    )
+  }
+
   render () {
     const { css, disabled } = this.props
-    const { track1Start, track2Start, mixDuration, showValidationText } = this.state
+    const {
+      track1Start,
+      track2Start,
+      mixDuration,
+      showValidationText,
+      renderingStatus
+    } = this.state
     return (
       <div className={merge(styles.root, css)}>
         <Button
@@ -121,68 +173,75 @@ export default class extends Component {
           {this.renderPlayPauseImage()}
           Preview
         </Button>
-        <form
-          className={styles.durationFieldsRoot}
-          onSubmit={this.onFormSubmit}
-        >
-          <span className={styles.durationField}>
-            <Input
-              id='track-one-start'
-              type='number'
-              css={styles.durationInput}
-              disabled={disabled}
-              onBlur={this.onTrack1StartBlur}
-              onChange={this.onTrack1StartChange}
-              value={track1Start}
-              min='0'
-            />
-            <label
-              className={styles.durationLabel}
-              htmlFor='track-one-start'
-            >
-              Track 1 start
-            </label>
-          </span>
-          <span className={styles.durationField}>
-            <Input
-              id='track-two-start'
-              type='number'
-              css={styles.durationInput}
-              disabled={disabled}
-              onBlur={this.onTrack2StartBlur}
-              onChange={this.onTrack2StartChange}
-              value={track2Start}
-              min='0'
-            />
-            <label
-              className={styles.durationLabel}
-              htmlFor='track-two-start'
-            >
-              Track 2 start
-            </label>
-          </span>
-          <span className={styles.durationField}>
-            <Input
-              id='mix-duration'
-              type='number'
-              css={styles.durationInput}
-              disabled={disabled}
-              onBlur={this.onMixDurationBlur}
-              onChange={this.onMixDurationChange}
-              value={mixDuration}
-              min='0'
-              max='MAX_MIX_DURATION'
-            />
-            <label
-              className={styles.durationLabel}
-              htmlFor='mix-duration'
-            >
-              Mix duration
-            </label>
-          </span>
+        <form onSubmit={this.onFormSubmit}>
+          <div className={styles.durationFieldsRoot}>
+            <span className={styles.durationField}>
+              <Input
+                id='track-one-start'
+                type='number'
+                css={styles.durationInput}
+                disabled={disabled}
+                onBlur={this.onTrack1StartBlur}
+                onChange={this.onTrack1StartChange}
+                value={track1Start}
+                min='0'
+              />
+              <label
+                className={styles.durationLabel}
+                htmlFor='track-one-start'
+              >
+                Track 1 start
+              </label>
+            </span>
+            <span className={styles.durationField}>
+              <Input
+                id='track-two-start'
+                type='number'
+                css={styles.durationInput}
+                disabled={disabled}
+                onBlur={this.onTrack2StartBlur}
+                onChange={this.onTrack2StartChange}
+                value={track2Start}
+                min='0'
+              />
+              <label
+                className={styles.durationLabel}
+                htmlFor='track-two-start'
+              >
+                Track 2 start
+              </label>
+            </span>
+            <span className={styles.durationField}>
+              <Input
+                id='mix-duration'
+                type='number'
+                css={styles.durationInput}
+                disabled={disabled}
+                onBlur={this.onMixDurationBlur}
+                onChange={this.onMixDurationChange}
+                value={mixDuration}
+                min='0'
+                max='MAX_MIX_DURATION'
+              />
+              <label
+                className={styles.durationLabel}
+                htmlFor='mix-duration'
+              >
+                Mix duration
+              </label>
+            </span>
+          </div>
           <div className={merge(styles.info, showValidationText ? null : styles.hidden)}>
             {`Mixes are limited to ${MAX_MIX_DURATION} seconds.`}
           </div>
+          <Button
+            css={styles.renderButton}
+            disabled={disabled || renderingStatus === RenderingStatus.RENDERING}
+            type='submit'
+          >
+            Render It!
+          </Button>
+          {this.renderRenderingStatus()}
         </form>
       </div>
     )
@@ -228,5 +287,8 @@ const styles = {
   }),
   hidden: css({
     visibility: 'hidden'
+  }),
+  renderButton: css({
+    marginTop: '8px'
   })
 }

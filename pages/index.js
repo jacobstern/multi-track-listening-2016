@@ -1,13 +1,15 @@
 import React, { Component } from 'react'
 import css from 'next/css'
+import Audio from '../components/Audio'
 import FileInput from '../components/file-input'
 import Head from '../components/head'
 import MixerControls from '../components/mixer-controls'
+import StatusText from '../components/status-text'
 import Step from '../components/step'
 import Steps from '../components/steps'
 import mixer from '../services/mixer'
 
-const fileState = {
+const FileStatus = {
   NULL: 'NULL',
   PROCESSING: 'PROCESSING',
   READY: 'READY',
@@ -20,9 +22,10 @@ export default class extends Component {
     super(props)
     this.state = {
       currentStep: 0,
-      file1State: fileState.NULL,
-      file2State: fileState.NULL,
-      supportsAudioParam: false
+      file1Status: FileStatus.NULL,
+      file2Status: FileStatus.NULL,
+      supportsAudioParam: false,
+      playbackURL: null
     }
   }
 
@@ -57,19 +60,19 @@ export default class extends Component {
     this.file1 = file
 
     if (file) {
-      this.setState({ file1State: fileState.PROCESSING })
+      this.setState({ file1Status: FileStatus.PROCESSING })
       this.processFile(
         file,
         mixer.setSource1.bind(mixer),
         () => {
           this.setState({
-            file1State: fileState.READY,
+            file1Status: FileStatus.READY,
             currentStep: 1
           })
         },
         () => {
           this.setState({
-            file1State: fileState.ERROR
+            file1Status: FileStatus.ERROR
           })
         }
       )
@@ -83,43 +86,52 @@ export default class extends Component {
     this.file2 = file
 
     if (file) {
-      this.setState({ file2State: fileState.PROCESSING })
+      this.setState({ file2Status: FileStatus.PROCESSING })
       this.processFile(
         file,
         mixer.setSource2.bind(mixer),
         success => {
           this.setState({
-            file2State: fileState.READY,
+            file2Status: FileStatus.READY,
             currentStep: 2
           })
         },
         () => {
           this.setState({
-            file2State: fileState.ERROR
+            file2Status: FileStatus.ERROR
           })
         }
       )
     }
   }
 
+  onRenderComplete = blob => {
+    this.setState({ playbackURL: URL.createObjectURL(blob) })
+  }
+
   renderFileStatus (state) {
+    let error = false
+    let status
+    switch (state) {
+      case FileStatus.ERROR:
+        status = 'error, please try a different file'
+        error = true
+        break
+      case FileStatus.READY:
+        status = 'done!'
+        break
+    }
     return (
-      <p className={styles.fileStatus}>
-        {state !== fileState.NULL &&
-          'Processing... '
-        }
-        {state === fileState.ERROR &&
-          <span>error, please try a different file.</span>
-        }
-        {state === fileState.READY &&
-          <span>done!</span>
-        }
-      </p>
+      <StatusText
+        label={state === FileStatus.NULL ? '' : 'Processing...'}
+        status={status}
+        error={error}
+      />
     )
   }
 
   render () {
-    const { currentStep, file1State, file2State } = this.state
+    const { currentStep, file1Status, file2Status, playbackURL } = this.state
     return (
       <div>
         <Head title='Multi-Track Listening!' />
@@ -130,11 +142,11 @@ export default class extends Component {
               <FileInput
                 accept='audio/*'
                 onChange={this.onFile1Change}
-                disabled={file1State === fileState.PROCESSING || file1State === fileState.READY}
+                disabled={file1Status === FileStatus.PROCESSING || file1Status === FileStatus.READY}
               >
                 Upload File
               </FileInput>
-              {this.renderFileStatus(file1State)}
+              {this.renderFileStatus(file1Status)}
             </Step>
             <Step>
               <p>Choose another track</p>
@@ -142,18 +154,27 @@ export default class extends Component {
                 accept='audio/*'
                 onChange={this.onFile2Change}
                 disabled={
-                  file2State === fileState.PROCESSING || file2State === fileState.READY ||
+                  file2Status === FileStatus.PROCESSING || file2Status === FileStatus.READY ||
                   currentStep < 1
                 }
                 >
                   Upload File
               </FileInput>
-              {this.renderFileStatus(file2State)}
+              {this.renderFileStatus(file2Status)}
             </Step>
             <Step>
               <p>Multi-track listening!</p>
-
-              <MixerControls disabled={currentStep < 2} />
+              <MixerControls
+                disabled={currentStep < 2}
+                onRenderComplete={this.onRenderComplete}
+              />
+              {playbackURL &&
+                <Audio
+                  css={styles.audio}
+                  controls
+                  src={playbackURL}
+                />
+              }
             </Step>
           </Steps>
         </div>
@@ -167,11 +188,7 @@ const styles = {
     padding: '8px 16px',
     fontSize: '15px'
   }),
-  fileStatus: css({
-    height: '19.5px',
-    margin: '12px 0 0 36px',
-    fontSize: '14px',
-    lineHeight: '1.5',
-    color: 'rgba(0, 0, 0, 0.86)'
+  audio: css({
+    marginTop: '12px'
   })
 }
