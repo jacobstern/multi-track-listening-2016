@@ -1,0 +1,29 @@
+{
+  "name": "multi-track-listening",
+  "version": "0.0.1",
+  "description": "https://www.youtube.com/watch?v=N2CKKV4Z44A",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "keywords": [
+    "multi-track",
+    "listening"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "next": "^1.1.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^7.1.0",
+    "eslint": "^3.9.1",
+    "eslint-config-standard": "^6.2.1",
+    "eslint-config-standard-jsx": "^3.2.0",
+    "eslint-plugin-promise": "^3.3.1",
+    "eslint-plugin-react": "^6.5.0",
+    "eslint-plugin-standard": "^2.0.1"
+  }
+}
