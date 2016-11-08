@@ -86,19 +86,7 @@ class Mixer {
   }
 
   configureListener (listener) {
-    if (this.supportsAudioParam) {
-      listener.forwardX.value = 0
-      listener.forwardY.value = 0
-      listener.forwardZ.value = -1
-      listener.upX.value = 0
-      listener.upY.value = 1
-      listener.upZ.value = 0
-      listener.positionX.value = 0
-      listener.positionY.value = 0
-      listener.positionZ.value = 0
-    } else {
-      listener.setOrientation(0, 0, -1, 0, 1, 0)
-    }
+    listener.setOrientation(0, 0, -1, 0, 1, 0)
   }
 
   setSource1 (buffer, success, error) {
