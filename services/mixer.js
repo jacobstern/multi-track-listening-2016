@@ -1,4 +1,12 @@
-import { MIX_GAIN, DEFAULT_MIX_DURATION, MIX_FADEOUT_DURATION } from '../common/constants'
+import {
+  MIX_GAIN,
+  DEFAULT_MIX_DURATION,
+  MIX_FADEOUT_DURATION,
+  DRIFT_DURATION,
+  DRIFT_RADIUS,
+  DRIFT_RESOLUTION,
+  DRIFT_Y
+} from '../common/constants'
 
 const createAudioContext = (key, type) => {
   // Keep audio context singleton in the global namespace for efficiency and to avoid errors when
@@ -191,11 +199,6 @@ class Mixer {
   }
 
   startPanners (panner1, panner2, currentTime) {
-    const DRIFT_RADIUS = 5
-    const DRIFT_Y = 1.25
-    const DRIFT_DURATION = 10
-    const DRIFT_RESOLUTION = 20
-
     panner1.positionY.value = DRIFT_Y
     panner2.positionY.value = DRIFT_Y
 
