@@ -4,6 +4,7 @@ import Button from './button'
 import Input from './input'
 import StatusText from './status-text'
 import { DEFAULT_MIX_DURATION, MAX_MIX_DURATION } from '../common/constants'
+import { renderProgress } from '../common/utils/component-utils'
 import mixer from '../services/mixer'
 
 const RenderingStatus = {
@@ -23,7 +24,8 @@ export default class extends Component {
       track2Start: 0,
       mixDuration: DEFAULT_MIX_DURATION,
       showValidationText: false,
-      renderingStatus: RenderingStatus.NONE
+      renderingStatus: RenderingStatus.NONE,
+      renderingProgress: 0
     }
   }
 
@@ -71,6 +73,9 @@ export default class extends Component {
       },
       () => {
         this.setState({ renderingStatus: RenderingStatus.ERROR })
+      },
+      progress => {
+        this.setState({ renderingProgress: progress })
       }
     )
   }
@@ -132,14 +137,21 @@ export default class extends Component {
   }
 
   renderRenderingStatus () {
-    const { renderingStatus } = this.state
+    const { renderingStatus, renderingProgress } = this.state
     return (
       <StatusText
         active={renderingStatus !== RenderingStatus.NONE}
         error={renderingStatus === RenderingStatus.ERROR}
-        status={renderingStatus === RenderingStatus.SUCCESS}
+        status={
+          renderingStatus === RenderingStatus.SUCCESS ||
+          renderingStatus === RenderingStatus.RENDERING
+        }
         label='Rendering'
-        statusText='done!'
+        statusText={
+          renderingStatus === RenderingStatus.SUCCESS
+            ? 'done!'
+            : renderProgress(renderingProgress)
+        }
         errorText='hmm, something went wrong...'
       />
     )

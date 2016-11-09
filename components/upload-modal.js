@@ -6,6 +6,7 @@ import H1 from './h1'
 import Input from './input'
 import Modal from './modal'
 import StatusText from './status-text'
+import { renderProgress } from '../common/utils/component-utils'
 import firebase from '../services/firebase'
 
 const UploadingStatus = {
@@ -63,7 +64,7 @@ export default class extends Component {
           if (_error) {
             this.setState({ transcodingStatus: TranscodingStatus.ERROR })
           } else {
-            this.setState({ transcodingProgress: _progress ? Math.floor(_progress) : 0 })
+            this.setState({ transcodingProgress: _progress || 0 })
           }
         }
       })
@@ -77,7 +78,7 @@ export default class extends Component {
     this.setState({ transcodingStatus: TranscodingStatus.TRANSCODING })
   }
 
-  onSubmit = event => {
+  onFormSubmit = event => {
     event.preventDefault()
 
     const onError = e => {
@@ -134,10 +135,6 @@ export default class extends Component {
     }
   }
 
-  renderProgress (progress) {
-    return (progress < 10 ? '\xa0' : '') + progress + '%'
-  }
-
   render () {
     const { active } = this.props
     const {
@@ -154,7 +151,7 @@ export default class extends Component {
         css={styles.modal}
       >
         <H1>Share This Mix</H1>
-        <form onSubmit={this.onSubmit}>
+        <form onSubmit={this.onFormSubmit}>
           <label
             className={styles.label}
             htmlFor='song-1-name'
@@ -202,7 +199,7 @@ export default class extends Component {
             }
             statusText={
             uploadingStatus === UploadingStatus.UPLOADING
-              ? this.renderProgress(uploadingProgress)
+              ? renderProgress(uploadingProgress)
               : 'done!'
             }
             errorText='error.'
@@ -217,7 +214,7 @@ export default class extends Component {
             }
             statusText={
               transcodingStatus === TranscodingStatus.TRANSCODING
-                ? transcodingProgress < 100 ? this.renderProgress(transcodingProgress) : 'done!'
+                ? transcodingProgress < 100 ? renderProgress(transcodingProgress) : 'done!'
                 : 'done!'
             }
             errorText='error.'

@@ -8,6 +8,8 @@ import {
   DRIFT_Y
 } from '../common/constants'
 
+const PROGRESS_UPDATE_INTERVAL = 200
+
 const createAudioContext = (key, type) => {
   // Keep audio context singleton in the global namespace for efficiency and to avoid errors when
   // hot reloading
@@ -89,7 +91,7 @@ class Mixer {
     this._previewContext.decodeAudioData(
       buffer,
       audioBuffer => {
-        this.source1 = audioBuffer
+        this._source1 = audioBuffer
         success()
       },
       error
@@ -100,7 +102,7 @@ class Mixer {
     this._previewContext.decodeAudioData(
       buffer,
       audioBuffer => {
-        this.source2 = audioBuffer
+        this._source2 = audioBuffer
         success()
       },
       error
@@ -240,6 +242,10 @@ class Mixer {
       error(new Error('OfflineAudioContext not supported'))
     }
 
+    if (this.mixDuration <= 0) {
+      error(new Error('Invalid mix duration'))
+    }
+
     const offlineContext = new OfflineAudioContext(2, 44100 * this.mixDuration, 44100)
     const offlinePanner1 = offlineContext.createPanner()
     const offlineSource1 = offlineContext.createBufferSource()
@@ -266,7 +272,26 @@ class Mixer {
     this._startPanners(offlinePanner1, offlinePanner2, currentTime)
     this._startSources(offlineSource1, offlineSource2, currentTime)
 
+    let progressTimeout
+
+    if (typeof progress === 'function') {
+      progress(0)
+
+      const totalDuration = this.mixDuration
+      const setProgressTimeout = () => setTimeout(
+        () => {
+          progress(100 * (offlineContext.currentTime - currentTime) / totalDuration)
+          progressTimeout = setProgressTimeout()
+        },
+        PROGRESS_UPDATE_INTERVAL
+      )
+
+      progressTimeout = setProgressTimeout()
+    }
+
     offlineContext.oncomplete = event => {
+      clearTimeout(progressTimeout)
+
       const buffer = event.renderedBuffer
       const worker = new Worker('static/js/recorder-worker.js')
 
