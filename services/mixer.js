@@ -31,42 +31,38 @@ const createAudioContext = (key, type) => {
 class Mixer {
 
   constructor () {
-    this.initialized = false
-  }
-
-  init () {
-    if (this.initialized) {
+    if (typeof window === 'undefined') {
       return
     }
 
-    this.previewContext = createAudioContext('_Mixer_previewContext')
-    this.previewGain = this.previewContext.createGain()
-    this.previewGain.connect(this.previewContext.destination)
+    this._previewContext = createAudioContext('_Mixer_previewContext')
+    this._previewGain = this._previewContext.createGain()
+    this._previewGain.connect(this._previewContext.destination)
 
-    this.previewPanner1 = this.previewContext.createPanner()
-    this.previewPanner1.connect(this.previewGain)
-    this.previewPanner2 = this.previewContext.createPanner()
-    this.previewPanner2.connect(this.previewGain)
+    this._previewPanner1 = this._previewContext.createPanner()
+    this._previewPanner1.connect(this._previewGain)
+    this._previewPanner2 = this._previewContext.createPanner()
+    this._previewPanner2.connect(this._previewGain)
 
-    this.supportsAudioParam = !!this.previewPanner1.orientationX
+    this.supportsAudioParam = !!this._previewPanner1.orientationX
 
-    this.configurePanner(this.previewPanner1)
-    this.configurePanner(this.previewPanner2)
-    this.configureListener(this.previewContext.listener)
+    this._configurePanner(this._previewPanner1)
+    this._configurePanner(this._previewPanner2)
+    this._configureListener(this._previewContext.listener)
 
-    this.source1 = null
-    this.source2 = null
-    this.previewSource1 = null
-    this.previewSource2 = null
+    this._source1 = null
+    this._source2 = null
+    this._previewSource1 = null
+    this._previewSource2 = null
 
-    this.playingPreview = false
+    this._playingPreview = false
 
     this.mixDuration = DEFAULT_MIX_DURATION
     this.track1Start = 0
     this.track2Start = 0
   }
 
-  configurePanner (panner) {
+  _configurePanner (panner) {
     panner.panningModel = 'HRTF'
     panner.distanceModel = 'exponential'
     panner.refDistance = 1
@@ -85,12 +81,12 @@ class Mixer {
     }
   }
 
-  configureListener (listener) {
+  _configureListener (listener) {
     listener.setOrientation(0, 0, -1, 0, 1, 0)
   }
 
   setSource1 (buffer, success, error) {
-    this.previewContext.decodeAudioData(
+    this._previewContext.decodeAudioData(
       buffer,
       audioBuffer => {
         this.source1 = audioBuffer
@@ -101,7 +97,7 @@ class Mixer {
   }
 
   setSource2 (buffer, success, error) {
-    this.previewContext.decodeAudioData(
+    this._previewContext.decodeAudioData(
       buffer,
       audioBuffer => {
         this.source2 = audioBuffer
@@ -111,7 +107,7 @@ class Mixer {
     )
   }
 
-  createValueArrays (duration, resolution, radius) {
+  _createValueArrays (duration, resolution, radius) {
     const pointsCount = duration * resolution
     const half = Math.ceil(pointsCount / 2)
     const sourceArrayX = new Float32Array(pointsCount + half)
@@ -140,41 +136,41 @@ class Mixer {
   }
 
   startPreview () {
-    if (this.playingPreview || this.source1 === null || this.source2 === null ||
+    if (this._playingPreview || this._source1 === null || this._source2 === null ||
         !this.supportsAudioParam) {
       // TODO: Fallback using requestAnimationFrame for browsers that don't have AudioParam
       // support, i.e. everything that is not Chrome
       return
     }
 
-    this.previewSource1 = this.previewContext.createBufferSource()
-    this.previewSource1.buffer = this.source1
-    this.previewSource1.connect(this.previewPanner1)
+    this.previewSource1 = this._previewContext.createBufferSource()
+    this._previewSource1.buffer = this._source1
+    this._previewSource1.connect(this._previewPanner1)
 
-    this.previewSource2 = this.previewContext.createBufferSource()
-    this.previewSource2.buffer = this.source2
-    this.previewSource2.connect(this.previewPanner2)
+    this.previewSource2 = this._previewContext.createBufferSource()
+    this._previewSource2.buffer = this._source2
+    this._previewSource2.connect(this._previewPanner2)
 
-    const currentTime = this.previewContext.currentTime
-    this.startGain(this.previewGain, currentTime)
-    this.startPanners(this.previewPanner1, this.previewPanner2, currentTime)
-    this.startSources(this.previewSource1, this.previewSource2, currentTime)
+    const currentTime = this._previewContext.currentTime
+    this._startGain(this._previewGain, currentTime)
+    this._startPanners(this._previewPanner1, this._previewPanner2, currentTime)
+    this._startSources(this._previewSource1, this._previewSource2, currentTime)
 
     this.playingPreview = true
   }
 
   stopPreview () {
-    if (!this.playingPreview) {
+    if (!this._playingPreview) {
       return
     }
 
-    this.previewSource1.stop()
-    this.previewSource2.stop()
+    this._previewSource1.stop()
+    this._previewSource2.stop()
 
     this.playingPreview = false
   }
 
-  startGain (gain, currentTime) {
+  _startGain (gain, currentTime) {
     gain.gain.cancelScheduledValues(currentTime)
     gain.gain.setValueAtTime(MIX_GAIN, currentTime)
 
@@ -186,7 +182,7 @@ class Mixer {
     }
   }
 
-  startPanners (panner1, panner2, currentTime) {
+  _startPanners (panner1, panner2, currentTime) {
     panner1.positionY.value = DRIFT_Y
     panner2.positionY.value = DRIFT_Y
 
@@ -195,7 +191,7 @@ class Mixer {
     panner2.positionX.cancelScheduledValues(currentTime)
     panner2.positionZ.cancelScheduledValues(currentTime)
 
-    const { left, right } = this.createValueArrays(DRIFT_DURATION, DRIFT_RESOLUTION, DRIFT_RADIUS)
+    const { left, right } = this._createValueArrays(DRIFT_DURATION, DRIFT_RESOLUTION, DRIFT_RADIUS)
 
     for (let i = 0; i < this.mixDuration / DRIFT_DURATION; i++) {
       const offset = (DRIFT_DURATION + 0.01) * i // Fudge factor of 0.01 to avoid collision
@@ -225,13 +221,17 @@ class Mixer {
     source.stop(currentTime + this.mixDuration)
   }
 
-  startSources (source1, source2, currentTime) {
+  _startSources (source1, source2, currentTime) {
     this.startSource(source1, this.track1Start, currentTime)
     this.startSource(source2, this.track2Start, currentTime)
   }
 
-  render (success, error) {
-    if (this.source1 === null || this.source2 === null && typeof error === 'function') {
+  render (success, error, progress) {
+    if (!this.supportsAudioParam) {
+      error(new Error('Rendering not supported on browsers without the new PannerNode properties'))
+    }
+
+    if (this._source1 === null || this._source2 === null && typeof error === 'function') {
       error(new Error('Mixer sources are not ready'))
     }
 
@@ -249,22 +249,22 @@ class Mixer {
     const offlineGain = offlineContext.createGain()
     offlineGain.connect(offlineContext.destination)
 
-    this.configurePanner(offlinePanner1)
-    this.configurePanner(offlinePanner2)
-    this.configureListener(offlineContext.listener)
+    this._configurePanner(offlinePanner1)
+    this._configurePanner(offlinePanner2)
+    this._configureListener(offlineContext.listener)
 
-    offlineSource1.buffer = this.source1
+    offlineSource1.buffer = this._source1
     offlineSource1.connect(offlinePanner1)
     offlinePanner1.connect(offlineGain)
 
-    offlineSource2.buffer = this.source2
+    offlineSource2.buffer = this._source2
     offlineSource2.connect(offlinePanner2)
     offlinePanner2.connect(offlineGain)
 
     const currentTime = offlineContext.currentTime
-    this.startGain(offlineGain, currentTime)
-    this.startPanners(offlinePanner1, offlinePanner2, currentTime)
-    this.startSources(offlineSource1, offlineSource2, currentTime)
+    this._startGain(offlineGain, currentTime)
+    this._startPanners(offlinePanner1, offlinePanner2, currentTime)
+    this._startSources(offlineSource1, offlineSource2, currentTime)
 
     offlineContext.oncomplete = event => {
       const buffer = event.renderedBuffer
@@ -296,6 +296,7 @@ class Mixer {
         type: 'audio/wav'
       })
     }
+
     offlineContext.startRendering()
   }
 }

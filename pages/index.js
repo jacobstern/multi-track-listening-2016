@@ -35,10 +35,7 @@ export default class extends Component {
   }
 
   componentWillMount () {
-    if (typeof window !== 'undefined') {
-      mixer.init()
-      this.setState({ supportsAudioParam: mixer.supportsAudioParam })
-    }
+    this.setState({ supportsAudioParam: mixer.supportsAudioParam })
   }
 
   loadFile (file, success, error) {
