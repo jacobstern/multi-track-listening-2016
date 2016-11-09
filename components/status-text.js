@@ -1,13 +1,24 @@
 import React from 'react'
 import css, { merge } from 'next/css'
 
-export default ({ css, label = '', status = '', error = false, ...other }) => (
+export default ({
+    css,
+    label = '',
+    statusText = '',
+    errorText = '',
+    active = false,
+    error = false,
+    status = false,
+    style,
+    ...other
+}) => (
   <p
     {...other}
     className={merge(styles.root, css)}
+    style={{ visibility: active ? 'visible' : 'hidden', ...style }}
   >
-    {label + ' '}
-    <span>{status}</span>
+    {label + '... '}
+    <span>{error ? errorText : (status ? statusText : '')}</span>
   </p>
 )
 

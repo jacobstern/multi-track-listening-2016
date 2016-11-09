@@ -113,11 +113,17 @@ export default class extends Component {
   }
 
   onRenderComplete = blob => {
+    if (this.state.playbackURL) {
+      URL.revokeObjectURL(this.state.playbackURL)
+    }
     this.setState({ playbackURL: URL.createObjectURL(blob) })
   }
 
   onModalClose = () => {
     this.setState({ showModal: false })
+  }
+
+  onModalNavigate = url => {
   }
 
   onShareClick = event => {
@@ -126,28 +132,28 @@ export default class extends Component {
   }
 
   renderFileStatus (state) {
-    let error = false
-    let status
-    switch (state) {
-      case FileStatus.ERROR:
-        status = 'error, please try a different file'
-        error = true
-        break
-      case FileStatus.READY:
-        status = 'done!'
-        break
-    }
     return (
       <StatusText
-        label={state === FileStatus.NULL ? '' : 'Processing...'}
-        status={status}
-        error={error}
+        active={state !== FileStatus.NULL}
+        error={state === FileStatus.ERROR}
+        status={state === FileStatus.READY}
+        label='Processing'
+        statusText='done!'
+        errorText='error, please try a different file.'
       />
     )
   }
 
   render () {
-    const { currentStep, file1Status, file2Status, playbackURL, showModal } = this.state
+    const {
+      currentStep,
+      file1Status,
+      file2Status,
+      file1Name,
+      file2Name,
+      playbackURL,
+      showModal
+    } = this.state
     return (
       <div>
         <Head title='Multi-Track Listening!' />
@@ -196,7 +202,7 @@ export default class extends Component {
                 style={{visibility: playbackURL ? 'visible' : 'hidden'}}
                 onClick={this.onShareClick}
               >
-                Share
+                Upload and Share
               </Button>
             </Step>
           </Steps>
@@ -204,7 +210,10 @@ export default class extends Component {
         <UploadModal
           active={playbackURL && showModal}
           objectURL={playbackURL}
+          file1Name={file1Name}
+          file2Name={file2Name}
           onClose={this.onModalClose}
+          onNavigate={this.onModalNavigate}
         />
       </div>
     )

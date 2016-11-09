@@ -134,22 +134,14 @@ export default class extends Component {
 
   renderRenderingStatus () {
     const { renderingStatus } = this.state
-    let status = ''
-    let error = false
-    switch (renderingStatus) {
-      case RenderingStatus.ERROR:
-        status = 'hmm, something went wrong.'
-        error = true
-        break
-      case RenderingStatus.SUCCESS:
-        status = 'success!'
-        break
-    }
     return (
       <StatusText
-        label={renderingStatus === RenderingStatus.NONE ? '' : 'Rendering...'}
-        status={status}
-        error={error}
+        active={renderingStatus !== RenderingStatus.NONE}
+        error={renderingStatus === RenderingStatus.ERROR}
+        status={renderingStatus === RenderingStatus.SUCCESS}
+        label='Rendering'
+        statusText='done!'
+        errorText='hmm, something went wrong...'
       />
     )
   }
@@ -165,14 +157,6 @@ export default class extends Component {
     } = this.state
     return (
       <div className={merge(styles.root, css)}>
-        <Button
-          css={styles.playPauseButton}
-          disabled={disabled}
-          onClick={this.onPlayPauseButtonClick}
-        >
-          {this.renderPlayPauseImage()}
-          Preview
-        </Button>
         <form onSubmit={this.onFormSubmit}>
           <div className={styles.durationFieldsRoot}>
             <span className={styles.durationField}>
@@ -235,6 +219,16 @@ export default class extends Component {
             {`Mixes are limited to ${MAX_MIX_DURATION} seconds.`}
           </div>
           <Button
+            css={styles.playPauseButton}
+            disabled={disabled}
+            onClick={this.onPlayPauseButtonClick}
+          >
+            {this.renderPlayPauseImage()}
+            <span className={styles.playPauseText}>
+              Preview
+            </span>
+          </Button>
+          <Button
             css={styles.renderButton}
             disabled={disabled || renderingStatus === RenderingStatus.RENDERING}
             type='submit'
@@ -253,12 +247,18 @@ const styles = {
     maxWidth: '600px'
   }),
   playPauseButton: css({
+    position: 'relative',
+    marginTop: '8px',
     paddingRight: '10px'
   }),
   playPauseImage: css({
+    position: 'absolute',
     height: '18px',
     width: '18px',
-    verticalAlign: 'text-bottom'
+    top: '1.5px'
+  }),
+  playPauseText: css({
+    marginLeft: '18px'
   }),
   durationFieldsRoot: css({
     margin: '8px 0'
@@ -286,6 +286,6 @@ const styles = {
     visibility: 'hidden'
   }),
   renderButton: css({
-    marginTop: '8px'
+    marginLeft: '8px'
   })
 }
