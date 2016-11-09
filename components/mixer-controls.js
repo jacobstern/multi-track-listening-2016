@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import css, { merge } from 'next/css'
-import Audio from './audio'
 import Button from './button'
 import Input from './input'
 import StatusText from './status-text'
@@ -265,7 +264,7 @@ const styles = {
   }),
   durationField: css({
     display: 'inline-block',
-    margin: '0 16px 8px 0'
+    margin: '0 22px 8px 0'
   }),
   durationInput: css({
     width: '38px',

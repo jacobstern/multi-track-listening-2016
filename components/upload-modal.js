@@ -54,7 +54,8 @@ export default class extends Component {
   transcodeFile (uid) {
     const database = firebase.database()
     const ref = database.ref('queue/tasks')
-    ref.push({ uid })
+    const { song1Name, song2Name } = this.state
+    ref.push({ uid, song1Name, song2Name })
       .on('value', snapshot => {
         const val = snapshot.val()
         if (val) {
@@ -70,7 +71,7 @@ export default class extends Component {
       .on('value', snapshot => {
         const val = snapshot.val()
         if (val && typeof this.props.onNavigate === 'function') {
-          this.props.onNavigate(`listen/${uid}`)
+          this.props.onNavigate(`listen?id=${uid}`)
         }
       })
     this.setState({ transcodingStatus: TranscodingStatus.TRANSCODING })
@@ -122,7 +123,7 @@ export default class extends Component {
     this.setState({ song1Name: event.target.value })
   }
 
-  onSong1NameChange = event => {
+  onSong2NameChange = event => {
     this.setState({ song2Name: event.target.value })
   }
 
@@ -178,17 +179,31 @@ export default class extends Component {
             value={song2Name}
             onChange={this.onSong2NameChange}
           />
+          <Button
+            css={styles.uploadButton}
+            type='submit'
+            disabled={uploadingStatus !== UploadingStatus.NONE}
+          >
+            Upload
+          </Button>
+          <Button
+            css={styles.cancelButton}
+            onClick={this.onCancelClick}
+            disabled={uploadingStatus !== UploadingStatus.NONE}
+           >
+           Cancel
+          </Button>
           <StatusText
             label='Uploading'
             active={uploadingStatus !== UploadingStatus.NONE}
             status={
-              uploadingStatus === UploadingStatus.UPLOADING ||
-              uploadingStatus === UploadingStatus.SUCCESS
+            uploadingStatus === UploadingStatus.UPLOADING ||
+            uploadingStatus === UploadingStatus.SUCCESS
             }
             statusText={
-              uploadingStatus === UploadingStatus.UPLOADING
-                ? this.renderProgress(uploadingProgress)
-                : 'done!'
+            uploadingStatus === UploadingStatus.UPLOADING
+              ? this.renderProgress(uploadingProgress)
+              : 'done!'
             }
             errorText='error.'
             error={uploadingStatus === UploadingStatus.ERROR}
@@ -202,26 +217,12 @@ export default class extends Component {
             }
             statusText={
               transcodingStatus === TranscodingStatus.TRANSCODING
-                ? this.renderProgress(transcodingProgress)
+                ? transcodingProgress < 100 ? this.renderProgress(transcodingProgress) : 'done!'
                 : 'done!'
             }
             errorText='error.'
             error={transcodingStatus === TranscodingStatus.ERROR}
           />
-          <Button
-            css={styles.uploadButton}
-            type='submit'
-            disabled={uploadingStatus === UploadingStatus.UPLOADING}
-          >
-            Upload
-          </Button>
-          <Button
-            css={styles.cancelButton}
-            onClick={this.onCancelClick}
-            disabled={uploadingStatus === UploadingStatus.UPLOADING}
-           >
-           Cancel
-          </Button>
         </form>
       </Modal>
     )

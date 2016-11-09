@@ -17,12 +17,6 @@ const styles = {
     border: '1px solid #666',
     '::-webkit-media-controls-panel': {
       background: 'transparent'
-    },
-    '::-webkit-media-controls-current-time-display': {
-      fontFamily: 'Cousine, Courier New, monospace, serif'
-    },
-    '::-webkit-media-controls-time-remaining-display': {
-      fontFamily: 'Cousine, Courier New, monospace, serif'
     }
   }),
   disabled: css({

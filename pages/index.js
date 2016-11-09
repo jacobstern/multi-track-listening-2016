@@ -3,7 +3,7 @@ import css from 'next/css'
 import Audio from '../components/audio'
 import Button from '../components/button'
 import FileInput from '../components/file-input'
-import Head from '../components/head'
+import PageHead from '../components/page-head'
 import MixerControls from '../components/mixer-controls'
 import StatusText from '../components/status-text'
 import Step from '../components/step'
@@ -124,6 +124,7 @@ export default class extends Component {
   }
 
   onModalNavigate = url => {
+    this.props.url.pushTo(url)
   }
 
   onShareClick = event => {
@@ -156,7 +157,7 @@ export default class extends Component {
     } = this.state
     return (
       <div>
-        <Head title='Multi-Track Listening!' />
+        <PageHead title='Multi-Track Listening!' />
         <div className={styles.content}>
           <Steps currentStep={currentStep}>
             <Step>

@@ -18,7 +18,7 @@ export default class extends Component {
   }
 
   render () {
-    const { children, disabled, ...rest } = this.props
+    const { children, disabled, value, ...rest } = this.props
     const { file } = this.state
     return (
       <div className={styles.root}>
@@ -29,6 +29,7 @@ export default class extends Component {
             disabled={disabled}
             type='file'
             onChange={this.onChange}
+            value={value || ''}
           />
           {children}
         </label>
