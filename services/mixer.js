@@ -145,11 +145,11 @@ class Mixer {
       return
     }
 
-    this.previewSource1 = this._previewContext.createBufferSource()
+    this._previewSource1 = this._previewContext.createBufferSource()
     this._previewSource1.buffer = this._source1
     this._previewSource1.connect(this._previewPanner1)
 
-    this.previewSource2 = this._previewContext.createBufferSource()
+    this._previewSource2 = this._previewContext.createBufferSource()
     this._previewSource2.buffer = this._source2
     this._previewSource2.connect(this._previewPanner2)
 
@@ -158,7 +158,7 @@ class Mixer {
     this._startPanners(this._previewPanner1, this._previewPanner2, currentTime)
     this._startSources(this._previewSource1, this._previewSource2, currentTime)
 
-    this.playingPreview = true
+    this._playingPreview = true
   }
 
   stopPreview () {
@@ -169,7 +169,7 @@ class Mixer {
     this._previewSource1.stop()
     this._previewSource2.stop()
 
-    this.playingPreview = false
+    this._playingPreview = false
   }
 
   _startGain (gain, currentTime) {

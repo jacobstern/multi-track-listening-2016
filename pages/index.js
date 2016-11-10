@@ -3,6 +3,7 @@ import css from 'next/css'
 import Audio from '../components/audio'
 import Button from '../components/button'
 import FileInput from '../components/file-input'
+import H1 from '../components/h1'
 import PageHead from '../components/page-head'
 import MixerControls from '../components/mixer-controls'
 import StatusText from '../components/status-text'
@@ -154,8 +155,9 @@ export default class extends Component {
     } = this.state
     return (
       <div>
-        <PageHead title='Multi-Track Listening!' />
+        <PageHead pageTitle='New Mix' />
         <div className={styles.content}>
+          <H1>New Mix</H1>
           <Steps currentStep={currentStep}>
             <Step>
               <p>Choose a track</p>
@@ -221,7 +223,8 @@ export default class extends Component {
 const styles = {
   content: css({
     padding: '8px 16px',
-    fontSize: '15px'
+    fontSize: '15px',
+    maxWidth: '600px'
   }),
   audio: css({
     display: 'block',

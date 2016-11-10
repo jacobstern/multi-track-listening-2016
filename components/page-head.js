@@ -1,9 +1,9 @@
 import React from 'react'
 import Head from 'next/head'
 
-export default ({ title }) => (
+export default ({ pageTitle }) => (
   <Head>
-    <title>{title}</title>
+    <title>{pageTitle} – Multi-Track Listening!</title>
     <meta charSet='UTF-8' />
     <meta name='viewport' content='initial-scale=1.0, width=device-width' />
     <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Cousine' />
