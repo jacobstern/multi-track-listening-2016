@@ -68,11 +68,11 @@ export default class extends Component {
           }
         }
       })
-    database.ref(`mixes/${uid}`)
+    database.ref(`mixesAlias/${uid}`)
       .on('value', snapshot => {
         const val = snapshot.val()
         if (val && typeof this.props.onNavigate === 'function') {
-          this.props.onNavigate(`listen?id=${uid}`)
+          this.props.onNavigate(`listen?id=${val}`)
         }
       })
     this.setState({ transcodingStatus: TranscodingStatus.TRANSCODING })
