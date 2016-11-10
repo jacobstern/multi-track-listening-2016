@@ -1,17 +1,13 @@
 import React, { Component } from 'react'
+import ReactDOM from 'react-dom'
 import css from 'next/css'
 import Audio from '../components/audio'
-import Button from '../components/button'
 import H1 from '../components/h1'
 import Input from '../components/input'
 import PageHead from '../components/page-head'
+import 'isomorphic-fetch'
 
 export default class extends Component {
-
-  constructor (props) {
-    super(props)
-    this.state = { location: '' }
-  }
 
   static async getInitialProps (context) {
     try {
@@ -36,18 +32,14 @@ export default class extends Component {
   }
 
   setInputRef = ref => {
-    this.input = ref
-  }
-
-  componentWillMount () {
-    if (typeof window !== 'undefined') {
-      this.setState({ location: window.location.href })
+    // TODO: Get URL from server in getInitialProps
+    if (ref) {
+      ReactDOM.findDOMNode(ref).value = window.location.href
     }
   }
 
   render () {
     const { playbackUrl, song1Name, song2Name, error } = this.props
-    const { location } = this.state
     return (
       <div className={styles.content}>
         <PageHead pageTitle='Listen' />
@@ -73,7 +65,6 @@ export default class extends Component {
               ref={this.setInputRef}
               css={styles.locationInput}
               readOnly
-              value={location}
             />
           </div>
         }

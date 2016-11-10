@@ -1,12 +1,18 @@
-import React from 'react'
+import React, { Component } from 'react'
 import css, { merge } from 'next/css'
 
-export default ({ css, ...rest }) => (
-  <input
-    {...rest}
-    className={merge(styles.root, css)}
-  />
-)
+export default class extends Component {
+
+  render () {
+    const { css, ...rest } = this.props
+    return (
+      <input
+        {...rest}
+        className={merge(styles.root, css)}
+      />
+    )
+  }
+}
 
 const styles = {
   root: css({
