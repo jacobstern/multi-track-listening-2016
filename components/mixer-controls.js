@@ -37,7 +37,7 @@ export default class extends Component {
   }
 
   validateDuration (value, min = 0, max = Number.POSITIVE_INFINITY, defaultValue = 0) {
-    const parsed = parseInt(value)
+    const parsed = parseFloat(value)
     let validated = defaultValue
     if (parsed >= min && parsed <= max) {
       validated = parsed
@@ -174,6 +174,7 @@ export default class extends Component {
               <Input
                 id='track-one-start'
                 type='number'
+                step='0.1'
                 css={styles.durationInput}
                 disabled={disabled}
                 onBlur={this.onTrack1StartBlur}
@@ -192,6 +193,7 @@ export default class extends Component {
               <Input
                 id='track-two-start'
                 type='number'
+                step='0.1'
                 css={styles.durationInput}
                 disabled={disabled}
                 onBlur={this.onTrack2StartBlur}
@@ -279,7 +281,7 @@ const styles = {
     margin: '0 22px 8px 0'
   }),
   durationInput: css({
-    width: '38px',
+    width: '46px',
     verticalAlign: 'middle'
   }),
   durationLabel: css({
